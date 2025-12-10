@@ -82,6 +82,23 @@ if(CLANG_TIDY_COMMAND)
     set_target_properties(messages PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
 endif()
 
+# Config library
+add_library(config
+    src/config.cpp
+)
+
+target_include_directories(config PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(config PUBLIC messages)
+
+# Apply clang-tidy to config library
+if(CLANG_TIDY_COMMAND)
+    set_target_properties(config PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+endif()
+
 # Tests
 enable_testing()
 
@@ -102,6 +119,22 @@ endif()
 include(GoogleTest)
 gtest_discover_tests(messages_test)
 
+add_executable(config_test
+    tests/config_test.cpp
+)
+
+target_link_libraries(config_test
+    config
+    GTest::gtest_main
+)
+
+# Apply clang-tidy to test targets
+if(CLANG_TIDY_COMMAND)
+    set_target_properties(config_test PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+endif()
+
+gtest_discover_tests(config_test)
+
 # Custom target for running clang-tidy manually
 if(CLANG_TIDY_EXE)
     add_custom_target(run-clang-tidy
@@ -114,7 +147,7 @@ if(CLANG_TIDY_EXE)
 endif()
 
 # Installation rules (optional, for future use)
-install(TARGETS messages
+install(TARGETS messages config
     EXPORT yass-targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
