@@ -99,6 +99,57 @@ if(CLANG_TIDY_COMMAND)
     set_target_properties(config PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
 endif()
 
+# Layouts library
+add_library(layouts
+    src/layouts.cpp
+)
+
+target_include_directories(layouts PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(layouts PUBLIC config)
+
+# Apply clang-tidy to layouts library
+if(CLANG_TIDY_COMMAND)
+    set_target_properties(layouts PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+endif()
+
+# Pages library
+add_library(pages
+    src/pages.cpp
+)
+
+target_include_directories(pages PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(pages PUBLIC config)
+
+# Apply clang-tidy to pages library
+if(CLANG_TIDY_COMMAND)
+    set_target_properties(pages PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+endif()
+
+# Main executable
+add_executable(yass
+    src/main.cpp
+)
+
+target_link_libraries(yass
+    config
+    layouts
+    pages
+    messages
+)
+
+# Apply clang-tidy to main executable
+if(CLANG_TIDY_COMMAND)
+    set_target_properties(yass PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+endif()
+
 # Tests
 enable_testing()
 
@@ -135,6 +186,24 @@ endif()
 
 gtest_discover_tests(config_test)
 
+add_executable(cli_test
+    tests/cli_test.cpp
+)
+
+target_link_libraries(cli_test
+    layouts
+    pages
+    config
+    GTest::gtest_main
+)
+
+# Apply clang-tidy to test targets
+if(CLANG_TIDY_COMMAND)
+    set_target_properties(cli_test PROPERTIES CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}")
+endif()
+
+gtest_discover_tests(cli_test)
+
 # Custom target for running clang-tidy manually
 if(CLANG_TIDY_EXE)
     add_custom_target(run-clang-tidy
@@ -147,7 +216,7 @@ if(CLANG_TIDY_EXE)
 endif()
 
 # Installation rules (optional, for future use)
-install(TARGETS messages config
+install(TARGETS messages config layouts pages yass
     EXPORT yass-targets
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
