@@ -1,0 +1,58 @@
+# Build directories
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+
+# Conan
+conan.lock
+conaninfo.txt
+conanbuildinfo.*
+conanfile.pyc
+.conan/
+CMakeUserPresets.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Compilation artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Test results
+Testing/
+CTestTestfile.cmake
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# Sanitizers
+*.san
+
+# Profiling
+*.prof
+gmon.out
+
+# Documentation
+docs/html/
+docs/latex/
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*_tmp
+.cache/
