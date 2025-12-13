@@ -102,7 +102,39 @@ target_link_libraries(config
         messages
 )
 
-# Main executable (placeholder for future milestones)
+# Layouts library
+add_library(layouts
+    src/layouts.cpp
+)
+
+target_include_directories(layouts
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(layouts
+    PUBLIC
+        config
+)
+
+# Pages library
+add_library(pages
+    src/pages.cpp
+)
+
+target_include_directories(pages
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(pages
+    PUBLIC
+        config
+)
+
+# Main executable
 add_executable(yass
     src/main.cpp
 )
@@ -111,6 +143,8 @@ target_link_libraries(yass
     PRIVATE
         messages
         config
+        layouts
+        pages
 )
 
 # Tests
@@ -140,6 +174,22 @@ target_link_libraries(config_test
 )
 
 add_test(NAME ConfigTest COMMAND config_test)
+
+add_executable(cli_test
+    tests/cli_test.cpp
+)
+
+target_link_libraries(cli_test
+    PRIVATE
+        config
+        messages
+        layouts
+        pages
+        GTest::gtest
+        GTest::gtest_main
+)
+
+add_test(NAME CLITest COMMAND cli_test)
 
 # Custom target for running clang-tidy manually
 if(CLANG_TIDY_EXE)
