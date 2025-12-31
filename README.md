@@ -1,193 +1,115 @@
-# AdaChess - Chess Engine
+# YASS - Yet Another Static Site Generator
 
-A modern C++ chess engine migrated from Ada, focusing on maintainability and performance.
+A C++20 implementation of the YASS static site generator, migrated from Ada.
 
 ## Overview
 
-AdaChess is a chess engine that provides move generation, position evaluation, and game play capabilities. This C++ version preserves the safety and correctness principles of the original Ada implementation while leveraging modern C++ features and tooling.
+YASS is a static site generator that processes markdown files, applies layouts, and generates a complete static website. This repository contains the C++ implementation of YASS, migrated from the original Ada codebase.
 
-## Requirements
+Source: https://github.com/dmallya93/yass.git
 
-- **C++ Compiler**: Clang 20+ or GCC 14+
-- **CMake**: 3.20 or higher
-- **Conan**: 2.x package manager
-- **Build Tools**: Make or Ninja
-- **Optional**: clang-tidy-20, clang-format-20 for development
+## Building
 
-## Building from Source
+### Prerequisites
 
-### 1. Install Dependencies
+- CMake 3.20 or higher
+- C++20 compatible compiler (GCC 11+ or Clang 14+)
+- Google Test library
 
-First, ensure Conan is installed and configured:
+### Build Commands
 
 ```bash
-# Install Conan (if not already installed)
-pip install conan
-
-# Detect and create default profile
-conan profile detect --force
-```
-
-### 2. Install Project Dependencies
-
-```bash
-cd /path/to/adachess
-conan install . --build=missing -s build_type=Debug
-```
-
-### 3. Configure and Build
-
-Using CMake presets (recommended):
-
-```bash
-# Configure for Clang Debug (with sanitizers and clang-tidy)
-cmake --preset clang-debug
+# Configure with GCC debug build (includes sanitizers)
+cmake --preset gcc-debug
 
 # Build
-cmake --build --preset clang-debug --parallel
-
-# Run the application
-./build/clang-debug/adachess
-```
-
-Alternative configurations:
-
-```bash
-# Clang Release
-cmake --preset clang-release
-cmake --build --preset clang-release --parallel
-
-# GCC Debug
-cmake --preset gcc-debug
 cmake --build --preset gcc-debug --parallel
 
-# GCC Release
-cmake --preset gcc-release
-cmake --build --preset gcc-release --parallel
+# Run tests
+ctest --preset gcc-debug --output-on-failure
+
+# Run with clang-tidy enabled
+cmake --preset gcc-debug -DENABLE_CLANG_TIDY=ON
+cmake --build --preset gcc-debug --parallel
 ```
 
-### 4. Run Tests
+### Available Build Presets
+
+- `gcc-debug` - Debug build with GCC and sanitizers
+- `gcc-release` - Release build with GCC
+- `clang-debug` - Debug build with Clang and sanitizers (requires Clang)
+- `clang-release` - Release build with Clang (requires Clang)
+
+## Usage
+
+### Create a new site
 
 ```bash
-# Run all tests
-ctest --preset clang-debug
+# Create a new site with default settings
+./yass createnow my-site
 
-# Run tests with verbose output
-ctest --preset clang-debug --verbose
+# Create a new site with interactive configuration
+./yass create my-site
 ```
 
-## Development
-
-### Code Formatting
-
-Format all source files:
+### Build the site
 
 ```bash
-cmake --build --preset clang-debug --target format
+# Build the site (generates HTML from markdown files)
+./yass build my-site
 ```
 
-Check formatting without modifying files:
+### Create markdown files
 
 ```bash
-cmake --build --preset clang-debug --target format-check
+# Create an empty markdown file with template comments
+./yass createfile my-site/page.md
 ```
 
-### Static Analysis
-
-Run clang-tidy manually:
+### Additional commands
 
 ```bash
-cmake --build --preset clang-debug --target run-clang-tidy
+# Show help
+./yass help
+
+# Show version
+./yass version
+
+# Show license
+./yass license
+
+# Show README
+./yass readme
 ```
 
-Note: clang-tidy runs automatically during builds when `ENABLE_CLANG_TIDY=ON` (default for presets).
+## Project Status
 
-### Sanitizers
+### Milestone 1 - Foundation, CLI, Configuration, and Messages
 
-Debug builds include AddressSanitizer and UndefinedBehaviorSanitizer by default. To disable:
+**Completed:**
+- **Messages Module** - Console output with color-coded messages (NORMAL, ERROR, SUCCESS)
+- **Configuration Module** - Parse and manage site.cfg files with all configuration settings
+- **CLI Entry Point** - Full command-line interface with argument parsing and routing
+- **Site Creation** - Create new site projects with directory structure and default files
+- **Layout Stubs** - Create default layout templates (default.html, directory.html)
+- **Pages Stubs** - Create empty markdown files with template comments
 
-```bash
-cmake --preset clang-debug -DENABLE_SANITIZERS=OFF
-cmake --build --preset clang-debug
-```
+**Commands implemented:**
+- `help`, `version`, `license`, `readme` - Information commands
+- `create`, `createnow` - Site creation with interactive/default configuration
+- `createfile` - Create empty markdown files
+- `build` - Skeleton implementation (loads config, placeholder message)
+- `server` - Skeleton placeholder (not yet functional)
 
-### Clean Build
-
-```bash
-# Clean build artifacts
-cmake --build --preset clang-debug --target clean
-
-# Complete clean (removes CMake cache)
-rm -rf build/
-```
-
-## Project Structure
-
-```
-adachess/
-├── include/adachess/      # Public header files
-│   └── version.hpp
-├── src/                   # Source files
-│   └── main.cpp
-├── tests/                 # Test files
-│   ├── test_main.cpp
-│   └── test_version.cpp
-├── CMakeLists.txt         # Build configuration
-├── CMakePresets.json      # Build presets
-├── conanfile.py          # Dependency specification
-├── .clang-tidy           # Static analysis config
-├── .clang-format         # Code formatting config
-└── README.md             # This file
-```
-
-## CMake Options
-
-- `CMAKE_BUILD_TYPE`: Build type (Debug, Release, RelWithDebInfo, MinSizeRel)
-- `ENABLE_SANITIZERS`: Enable AddressSanitizer and UndefinedBehaviorSanitizer (default: ON for Debug)
-- `ENABLE_CLANG_TIDY`: Enable clang-tidy static analysis (default: ON)
-
-## Troubleshooting
-
-### Conan Issues
-
-If you encounter Conan-related errors:
-
-```bash
-# Remove Conan cache and reinstall
-conan remove "*" --confirm
-conan install . --build=missing -s build_type=Debug
-```
-
-### Compiler Not Found
-
-Ensure the compiler is in your PATH:
-
-```bash
-# Check Clang
-which clang++
-
-# Check GCC
-which g++
-```
-
-### clang-tidy Warnings
-
-If clang-tidy produces warnings that fail the build, you can temporarily disable it:
-
-```bash
-cmake --preset clang-debug -DENABLE_CLANG_TIDY=OFF
-cmake --build --preset clang-debug
-```
+**Not yet implemented:**
+- Full site building (pages generation, modules processing, layouts application)
+- Sitemaps and Atom feed generation
+- Web server and file monitoring
+- Hot-reload functionality
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 - see the COPYING file for details.
-
-## Contributing
-
-Contributions are welcome! Please ensure:
-
-1. Code follows the project's formatting standards (run `format` target)
-2. All tests pass (`ctest`)
-3. No clang-tidy warnings are introduced
-4. Sanitizers detect no issues in debug builds
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.

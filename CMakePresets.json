@@ -1,93 +1,127 @@
 {
-    "version": 3,
-    "configurePresets": [
-        {
-            "name": "clang-debug",
-            "displayName": "Clang Debug",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/clang-debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_COMPILER": "clang++-20",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/Debug/generators/conan_toolchain.cmake",
-                "ENABLE_CLANG_TIDY": "ON",
-                "ENABLE_SANITIZERS": "ON"
-            }
-        },
-        {
-            "name": "clang-release",
-            "displayName": "Clang Release",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/clang-release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_COMPILER": "clang++-20",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/Release/generators/conan_toolchain.cmake",
-                "ENABLE_CLANG_TIDY": "ON",
-                "ENABLE_SANITIZERS": "OFF"
-            }
-        },
-        {
-            "name": "gcc-debug",
-            "displayName": "GCC Debug",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/gcc-debug",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/Debug/generators/conan_toolchain.cmake",
-                "ENABLE_CLANG_TIDY": "ON",
-                "ENABLE_SANITIZERS": "ON"
-            }
-        },
-        {
-            "name": "gcc-release",
-            "displayName": "GCC Release",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/gcc-release",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_CXX_COMPILER": "g++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/build/Release/generators/conan_toolchain.cmake",
-                "ENABLE_CLANG_TIDY": "ON",
-                "ENABLE_SANITIZERS": "OFF"
-            }
-        }
-    ],
-    "buildPresets": [
-        {
-            "name": "clang-debug",
-            "configurePreset": "clang-debug"
-        },
-        {
-            "name": "clang-release",
-            "configurePreset": "clang-release"
-        },
-        {
-            "name": "gcc-debug",
-            "configurePreset": "gcc-debug"
-        },
-        {
-            "name": "gcc-release",
-            "configurePreset": "gcc-release"
-        }
-    ],
-    "testPresets": [
-        {
-            "name": "clang-debug",
-            "configurePreset": "clang-debug"
-        },
-        {
-            "name": "clang-release",
-            "configurePreset": "clang-release"
-        },
-        {
-            "name": "gcc-debug",
-            "configurePreset": "gcc-debug"
-        },
-        {
-            "name": "gcc-release",
-            "configurePreset": "gcc-release"
-        }
-    ]
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/install/${presetName}"
+    },
+    {
+      "name": "clang-base",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "gcc-base",
+      "hidden": true,
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug",
+      "description": "Debug build with Clang and sanitizers",
+      "inherits": "clang-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_SANITIZERS": "ON",
+        "ENABLE_CLANG_TIDY": "OFF"
+      }
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release",
+      "description": "Release build with Clang",
+      "inherits": "clang-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_SANITIZERS": "OFF"
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug",
+      "description": "Debug build with GCC and sanitizers",
+      "inherits": "gcc-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "description": "Release build with GCC",
+      "inherits": "gcc-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "ENABLE_SANITIZERS": "OFF"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "clang-debug",
+      "configurePreset": "clang-debug",
+      "jobs": 4
+    },
+    {
+      "name": "clang-release",
+      "configurePreset": "clang-release",
+      "jobs": 4
+    },
+    {
+      "name": "gcc-debug",
+      "configurePreset": "gcc-debug",
+      "jobs": 4
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "gcc-release",
+      "jobs": 4
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "clang-debug",
+      "configurePreset": "clang-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "clang-release",
+      "configurePreset": "clang-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "configurePreset": "gcc-debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "gcc-release",
+      "configurePreset": "gcc-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
 }

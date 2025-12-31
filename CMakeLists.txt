@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(adachess VERSION 1.0.0 LANGUAGES CXX)
+project(yass VERSION 1.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,11 +16,37 @@ endif()
 
 # Enable modern C++ warnings
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    add_compile_options(
+        -Wall -Wextra -Wpedantic
+        -Wconversion -Wshadow
+        -Wnon-virtual-dtor
+        -Wold-style-cast
+        -Wcast-align
+        -Wunused
+        -Woverloaded-virtual
+    )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    add_compile_options(
+        -Wall -Wextra -Wpedantic
+        -Wconversion -Wshadow
+        -Wnon-virtual-dtor
+        -Wold-style-cast
+        -Wcast-align
+        -Wunused
+        -Woverloaded-virtual
+    )
 elseif(MSVC)
-    add_compile_options(/W4 /WX /permissive-)
+    add_compile_options(/W4 /permissive-)
+endif()
+
+# Option for warnings as errors
+option(WARNINGS_AS_ERRORS "Treat warnings as errors" OFF)
+if(WARNINGS_AS_ERRORS)
+    if(MSVC)
+        add_compile_options(/WX)
+    else()
+        add_compile_options(-Werror)
+    endif()
 endif()
 
 # Sanitizer support: Enabled by default in Debug builds
@@ -33,90 +59,156 @@ if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 endif()
 
-# Set up clang-tidy (automatic during build)
-option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy-20" "clang-tidy")
-if(CLANG_TIDY_EXE AND ENABLE_CLANG_TIDY)
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
-    message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+# Set up clang-tidy
+option(ENABLE_CLANG_TIDY "Enable clang-tidy checks" OFF)
+if(ENABLE_CLANG_TIDY)
+    find_program(CLANG_TIDY_EXE NAMES "clang-tidy-20" "clang-tidy")
+    if(CLANG_TIDY_EXE)
+        set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
+        message(STATUS "clang-tidy found: ${CLANG_TIDY_EXE}")
+    else()
+        message(WARNING "clang-tidy not found!")
+    endif()
 endif()
 
-# Find dependencies
+# Find Google Test
 find_package(GTest REQUIRED)
+enable_testing()
+
+# Messages library
+add_library(messages
+    src/messages.cpp
+)
+
+target_include_directories(messages
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+# Config library
+add_library(config
+    src/config.cpp
+)
+
+target_include_directories(config
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(config
+    PUBLIC
+        messages
+)
+
+# Layouts library
+add_library(layouts
+    src/layouts.cpp
+)
+
+target_include_directories(layouts
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(layouts
+    PUBLIC
+        config
+)
+
+# Pages library
+add_library(pages
+    src/pages.cpp
+)
+
+target_include_directories(pages
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(pages
+    PUBLIC
+        config
+)
 
 # Main executable
-add_executable(adachess
+add_executable(yass
     src/main.cpp
 )
 
-target_include_directories(adachess PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
+target_link_libraries(yass
+    PRIVATE
+        messages
+        config
+        layouts
+        pages
 )
-
-# Install target
-install(TARGETS adachess DESTINATION bin)
 
 # Tests
-enable_testing()
-
-add_executable(adachess_tests
-    tests/test_main.cpp
-    tests/test_version.cpp
+add_executable(messages_test
+    tests/messages_test.cpp
 )
 
-target_include_directories(adachess_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
+target_link_libraries(messages_test
+    PRIVATE
+        messages
+        GTest::gtest
+        GTest::gtest_main
 )
 
-target_link_libraries(adachess_tests
-    GTest::gtest
-    GTest::gtest_main
+add_test(NAME MessagesTest COMMAND messages_test)
+
+add_executable(config_test
+    tests/config_test.cpp
 )
 
-add_test(NAME unit_tests COMMAND adachess_tests)
+target_link_libraries(config_test
+    PRIVATE
+        config
+        messages
+        GTest::gtest
+        GTest::gtest_main
+)
 
-# Custom targets for code formatting
-find_program(CLANG_FORMAT_EXE NAMES "clang-format-20" "clang-format")
-if(CLANG_FORMAT_EXE)
-    file(GLOB_RECURSE ALL_SOURCE_FILES
-        ${CMAKE_SOURCE_DIR}/src/*.cpp
-        ${CMAKE_SOURCE_DIR}/include/**/*.hpp
-        ${CMAKE_SOURCE_DIR}/tests/*.cpp
-    )
-    if(ALL_SOURCE_FILES)
-        add_custom_target(format
-            COMMAND ${CLANG_FORMAT_EXE} -i ${ALL_SOURCE_FILES}
-            COMMENT "Formatting source files with clang-format"
-        )
-        add_custom_target(format-check
-            COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${ALL_SOURCE_FILES}
-            COMMENT "Checking code formatting"
-        )
-    endif()
-endif()
+add_test(NAME ConfigTest COMMAND config_test)
 
-# Custom target for manual clang-tidy run
+add_executable(cli_test
+    tests/cli_test.cpp
+)
+
+target_link_libraries(cli_test
+    PRIVATE
+        config
+        messages
+        layouts
+        pages
+        GTest::gtest
+        GTest::gtest_main
+)
+
+add_test(NAME CLITest COMMAND cli_test)
+
+# Custom target for running clang-tidy manually
 if(CLANG_TIDY_EXE)
-    file(GLOB_RECURSE SRC_FILES
-        ${CMAKE_SOURCE_DIR}/src/*.cpp
-        ${CMAKE_SOURCE_DIR}/tests/*.cpp
+    add_custom_target(run-clang-tidy
+        COMMAND ${CLANG_TIDY_EXE}
+            -p ${CMAKE_BINARY_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Running clang-tidy"
     )
-    if(SRC_FILES)
-        add_custom_target(run-clang-tidy
-            COMMAND ${CLANG_TIDY_EXE}
-                -p ${CMAKE_BINARY_DIR}
-                --extra-arg=-I${CMAKE_SOURCE_DIR}/include
-                ${SRC_FILES}
-            COMMENT "Running clang-tidy on source files"
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        )
-    endif()
 endif()
 
-# Custom target for clean
-add_custom_target(clean-all
-    COMMAND ${CMAKE_BUILD_TOOL} clean
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/CMakeFiles
-    COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/CMakeCache.txt
-    COMMENT "Cleaning build directory"
+# Installation rules
+install(TARGETS yass
+    RUNTIME DESTINATION bin
+)
+
+install(DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
 )

@@ -1,18 +1,44 @@
 # Build directories
 build/
 cmake-build-*/
-CMakeFiles/
+
+# CMake
 CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
 
-# Conan
-conan.lock
-conaninfo.txt
-conanbuildinfo.*
-conanfile.pyc
-.conan/
-CMakeUserPresets.json
+# Compiled Object files
+*.o
+*.obj
+*.ko
+*.slo
+*.lo
 
-# IDE
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.a
+*.la
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+yass
+
+# IDE files
 .vscode/
 .idea/
 *.swp
@@ -20,39 +46,21 @@ CMakeUserPresets.json
 *~
 .DS_Store
 
-# Compilation artifacts
-*.o
-*.a
-*.so
-*.dylib
-*.dll
-*.exe
+# Conan
+conanfile.lock
+conan.lock
+graph_info.json
+conanbuildinfo.*
 
 # Test results
 Testing/
-CTestTestfile.cmake
-
-# Coverage
-*.gcda
-*.gcno
-*.gcov
-coverage/
-
-# Sanitizers
-*.san
-
-# Profiling
-*.prof
-gmon.out
-
-# Documentation
-docs/html/
-docs/latex/
-
-# Logs
 *.log
 
-# Temporary files
-*.tmp
-*_tmp
-.cache/
+# Coverage
+*.gcov
+*.gcda
+*.gcno
+coverage/
+
+# Sanitizer output
+*.san
