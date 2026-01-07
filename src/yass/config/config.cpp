@@ -102,7 +102,8 @@ void normalize_dir(std::string& directory_path,
 
 }  // anonymous namespace
 
-void create_site_config(const std::string& directory_name) {
+void create_site_config(const std::string& directory_name,
+                       const Parser_Config& config) {
   if (directory_name.empty()) {
     throw std::invalid_argument("directory_name must not be empty");
   }
@@ -145,7 +146,7 @@ void create_site_config(const std::string& directory_name) {
   pl("# The name of the site which will be created. If you have enabled");
   pl("# creating Atom feed then it is needed. Otherwise, you can use it as a");
   pl("# normal template tag.");
-  pl("Name = " + yass_conf.site_name);
+  pl("Name = " + config.site_name);
   pl("");
 
   pl("# The description of the site which will be created. Must be in one "
@@ -153,31 +154,31 @@ void create_site_config(const std::string& directory_name) {
   pl("# no new line allowed. It is used to set meta tag description (which is");
   pl("# showed in search engines results) but only when pages don't set it.");
   pl("# Optional setting.");
-  pl("Description = " + yass_conf.description);
+  pl("Description = " + config.description);
   pl("");
 
   pl("# The ISO 639-1 language code in which the site will be created.");
-  pl("Language = " + yass_conf.language);
+  pl("Language = " + config.language);
   pl("");
 
   pl("# Name of author of the site. If you have enable creating Atom feed,");
   pl("# then it is needed. Otherwise, you can use it as a normal template "
      "tag.");
   pl("# It is also used in setting meta tag author for all pages.");
-  pl("Author = " + yass_conf.author_name);
+  pl("Author = " + config.author_name);
   pl("");
 
   pl("# Email address of author of the site. If you have enable creating Atom");
   pl("# feed, then it is needed. Otherwise, you can use it as a normal");
   pl("# template tag.");
-  pl("AuthorEmail = " + yass_conf.author_email);
+  pl("AuthorEmail = " + config.author_email);
   pl("");
 
   pl("# Base URL of the site. It is needed mostly for creating sitemap and");
   pl("# Atom feed, but you can use it as a normal the site tag. If your site");
   pl("# will be available at https://mysite.com/blog then this will be your");
   pl("# BaseURL.");
-  pl("BaseURL = " + yass_conf.base_url);
+  pl("BaseURL = " + config.base_url);
   pl("");
 
   pl("# Source which will be used for creating Atom feed of the site.");
@@ -185,77 +186,77 @@ void create_site_config(const std::string& directory_name) {
   pl("# Atom entries from proper tags in .md files, [filename]: the path");
   pl("# (related to the project directory path) to markdown file which will");
   pl("# be used as a source of atom feed (must have proper tags set inside).");
-  pl("AtomFeedSource = " + yass_conf.atom_feed_source);
+  pl("AtomFeedSource = " + config.atom_feed_source);
   pl("");
 
   pl("# Number of entries in the Atom feed of the site. Try not set it too");
   pl("# high, recommended values are between 10 and 50.");
-  pl("AtomFeedAmount = " + std::to_string(yass_conf.atom_feed_amount));
+  pl("AtomFeedAmount = " + std::to_string(config.atom_feed_amount));
   pl("");
 
   pl("# Should the program create sitemap when creating the site. Possible");
   pl("# values are true or false (case-insensitive).");
   pl("SitemapEnabled = " +
-     std::string(yass_conf.sitemap_enabled ? "true" : "false"));
+     std::string(config.sitemap_enabled ? "true" : "false"));
   pl("");
 
   pl("# Should program convert HTML in markdown documents to actual HTML.");
   pl("# Possible values are true or false (case-insensitive).");
-  pl("HTMLEnabled = " + std::string(yass_conf.html_enabled ? "true" : "false"));
+  pl("HTMLEnabled = " + std::string(config.html_enabled ? "true" : "false"));
   pl("");
 
   pl("# Should the program start web server when monitoring for changes in");
   pl("# site. Possible values are true or false (case-insensitive).");
   pl("ServerEnabled = " +
-     std::string(yass_conf.server_enabled ? "true" : "false"));
+     std::string(config.server_enabled ? "true" : "false"));
   pl("");
 
   pl("# Port on which web server will be listen if enabled. Possible values");
   pl("# are from 1 to 65535. Please remember, that ports below 1025 require");
   pl("# root privileges to work.");
-  pl("ServerPort = " + std::to_string(yass_conf.server_port));
+  pl("ServerPort = " + std::to_string(config.server_port));
   pl("");
 
   pl("# Should web server and whole monitoring of the site changes stop if");
   pl("# encounter any error during the site creation.  Possible values are");
   pl("# true or false (case-insensitive).");
   pl("StopServerOnError = " +
-     std::string(yass_conf.stop_server_on_error ? "true" : "false"));
+     std::string(config.stop_server_on_error ? "true" : "false"));
   pl("");
 
   pl("# Full path to the command which will be used to start the web browser");
   pl("# with index.html page of the site. String \"%s\" (without quotes) will");
   pl("# be replaced by server URL. If this setting is \"none\", the web");
   pl("# browser will be not started, same as when the web server is disabled.");
-  pl("BrowserCommand = " + yass_conf.browser_command);
+  pl("BrowserCommand = " + config.browser_command);
   pl("");
 
   pl("# How often (in seconds) the program should monitor site for changes");
   pl("# and regenerate it if needed. Can be any positive number, but you");
   pl("# probably don't want to set it to check every few thousands years :)");
-  pl("MonitorInterval = " + std::to_string(yass_conf.monitor_interval.count()));
+  pl("MonitorInterval = " + std::to_string(config.monitor_interval.count()));
   pl("");
 
   pl("# How often (in seconds) the program should monitor site configuration");
   pl("# for changes and reconfigure it if needed. Can be any positive number.");
   pl("MonitorConfigInterval = " +
-     std::to_string(yass_conf.monitor_config_interval.count()));
+     std::to_string(config.monitor_config_interval.count()));
   pl("");
 
   pl("# String used to mark start of the templates tags, used in templates");
   pl("# files. You may want to change it, if you want to use templates from");
   pl("# other static site generator.");
-  pl("StartTagSeparator = " + yass_conf.start_tag_separator);
+  pl("StartTagSeparator = " + config.start_tag_separator);
   pl("");
 
   pl("# String used to mark end of the templates tags, used in templates");
   pl("# files. You may want to change it, if you want to use templates from");
   pl("# other static site generator.");
-  pl("EndTagSeparator = " + yass_conf.end_tag_separator);
+  pl("EndTagSeparator = " + config.end_tag_separator);
   pl("");
 
   pl("# String used to mark comments in markdown files which will be parsed.");
-  pl("MarkdownComment = " + yass_conf.markdown_comment);
+  pl("MarkdownComment = " + config.markdown_comment);
   pl("");
 
   pl("# Site tags, optional. Tags can be 4 types: strings, boolean, numeric");
