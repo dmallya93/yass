@@ -1,0 +1,40 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# Conan
+conan/
+CMakeUserPresets.json
+
+# Compiled binaries
+yass
+*.exe
+*.out
+*.app
+
+# C++ artifacts
+*.o
+*.so
+*.a
+*.dylib
+*.lib
+*.dll
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test output
+Testing/
+*.log
+
+# Coverage
+*.gcov
+*.gcda
+*.gcno
+coverage/
