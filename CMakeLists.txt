@@ -33,6 +33,7 @@ endif()
 
 # Conan dependencies - find packages
 find_package(spdlog REQUIRED)
+find_package(CLI11 REQUIRED)
 find_package(GTest REQUIRED)
 
 # Logging library
@@ -65,6 +66,23 @@ target_include_directories(yass_config
 target_link_libraries(yass_config
     PUBLIC
         yass_logging
+)
+
+# Main executable
+add_executable(yass
+    src/yass/cli/main.cpp
+)
+
+target_include_directories(yass
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(yass
+    PRIVATE
+        yass_config
+        yass_logging
+        CLI11::CLI11
 )
 
 # Sanitizer support: Enabled by default in Debug builds
@@ -103,6 +121,17 @@ target_link_libraries(test_config
 )
 
 add_test(NAME ConfigTests COMMAND test_config)
+
+add_executable(test_cli_integration
+    tests/integration/test_cli.cpp
+)
+
+target_link_libraries(test_cli_integration
+    PRIVATE
+        GTest::gtest_main
+)
+
+add_test(NAME CliIntegrationTests COMMAND test_cli_integration)
 
 # Custom targets for code formatting
 find_program(CLANG_FORMAT_EXE NAMES "clang-format-20" "clang-format")

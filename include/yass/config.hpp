@@ -119,6 +119,9 @@ struct Parser_Config {
   std::string description = "My new site";
 };
 
+/// Alias for backward compatibility
+using SiteConfig = Parser_Config;
+
 /// Global parser configuration (corresponds to Ada's Yass_Conf)
 extern Parser_Config yass_conf;
 
@@ -138,9 +141,11 @@ extern Table_Tags_Container global_table_tags;
 ///
 /// @param directory_name Full path to the directory where config file will be
 /// created
+/// @param config Configuration to write (optional, uses current yass_conf if not provided)
 /// @throws std::runtime_error if file creation fails
 /// @pre directory_name must not be empty
-void create_site_config(const std::string& directory_name);
+void create_site_config(const std::string& directory_name,
+                       const Parser_Config& config = yass_conf);
 
 /// Load and parse site config file from the specified directory
 ///
