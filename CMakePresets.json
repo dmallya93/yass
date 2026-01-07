@@ -1,0 +1,62 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug",
+            "description": "Debug build with sanitizers",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_MODULE_PATH": "${sourceDir}/build",
+                "ENABLE_CLANG_TIDY": "ON",
+                "ENABLE_SANITIZERS": "ON"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release",
+            "description": "Release build with optimizations",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_MODULE_PATH": "${sourceDir}/build",
+                "ENABLE_CLANG_TIDY": "OFF",
+                "ENABLE_SANITIZERS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}

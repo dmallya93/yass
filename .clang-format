@@ -1,0 +1,72 @@
+---
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++20
+
+# Indentation
+IndentWidth: 2
+TabWidth: 2
+UseTab: Never
+ColumnLimit: 80
+
+# Braces
+BreakBeforeBraces: Attach
+Cpp11BracedListStyle: true
+
+# Pointers and references
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Includes
+IncludeBlocks: Regroup
+SortIncludes: CaseInsensitive
+IncludeCategories:
+  - Regex: '^"yass/'
+    Priority: 1
+  - Regex: '^<(gtest|gmock)/'
+    Priority: 3
+  - Regex: '^<spdlog/'
+    Priority: 2
+  - Regex: '^<.*\.h>'
+    Priority: 4
+  - Regex: '^<.*>'
+    Priority: 5
+  - Regex: '.*'
+    Priority: 6
+
+# Namespaces
+CompactNamespaces: false
+FixNamespaceComments: true
+NamespaceIndentation: None
+
+# Functions
+AlwaysBreakAfterReturnType: None
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: All
+
+# Control statements
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Comments
+ReflowComments: true
+SpacesBeforeTrailingComments: 2
+
+# Other
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: true
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackArguments: true
+BinPackParameters: true
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+MaxEmptyLinesToKeep: 1
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
+SpacesInAngles: false
+SpacesInContainerLiterals: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
