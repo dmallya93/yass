@@ -19,8 +19,7 @@
 
 #include <string>
 
-namespace yass {
-namespace logging {
+namespace yass::logging {
 namespace {
 
 // ANSI color codes for verification
@@ -30,10 +29,10 @@ constexpr const char* ANSI_GREEN = "\033[32m";
 
 // Helper to capture stdout
 class StdoutCapture {
- public:
+public:
   StdoutCapture() { testing::internal::CaptureStdout(); }
 
-  std::string GetOutput() {
+  static std::string get_output() {
     return testing::internal::GetCapturedStdout();
   }
 };
@@ -42,7 +41,7 @@ class StdoutCapture {
 TEST(LoggingTest, ErrorMessageHasRedColor) {
   StdoutCapture capture;
   show_message("Error test", MessageType::ERROR);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   // Verify red color code is present
   EXPECT_NE(output.find(ANSI_RED), std::string::npos)
@@ -65,7 +64,7 @@ TEST(LoggingTest, ErrorMessageHasRedColor) {
 TEST(LoggingTest, SuccessMessageHasGreenColor) {
   StdoutCapture capture;
   show_message("Success test", MessageType::SUCCESS);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   // Verify green color code is present
   EXPECT_NE(output.find(ANSI_GREEN), std::string::npos)
@@ -88,7 +87,7 @@ TEST(LoggingTest, SuccessMessageHasGreenColor) {
 TEST(LoggingTest, NormalMessageHasNoColor) {
   StdoutCapture capture;
   show_message("Normal test", MessageType::NORMAL);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   // Verify NO color codes are present
   EXPECT_EQ(output.find(ANSI_RED), std::string::npos)
@@ -113,7 +112,7 @@ TEST(LoggingTest, NormalMessageHasNoColor) {
 TEST(LoggingTest, DefaultMessageTypeIsError) {
   StdoutCapture capture;
   show_message("Default type test");
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   // Default type should be ERROR, so red color should be present
   EXPECT_NE(output.find(ANSI_RED), std::string::npos)
@@ -129,7 +128,7 @@ TEST(LoggingTest, DefaultConstant) {
 TEST(LoggingTest, OutputFormatMatchesAda) {
   StdoutCapture capture;
   show_message("Format test", MessageType::NORMAL);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   // Should be just: "Format test\n" with no timestamps or log levels
   EXPECT_EQ(output, "Format test\n")
@@ -140,7 +139,7 @@ TEST(LoggingTest, OutputFormatMatchesAda) {
 TEST(LoggingTest, StringLiterals) {
   StdoutCapture capture;
   show_message("String literal test", MessageType::NORMAL);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   EXPECT_NE(output.find("String literal test"), std::string::npos);
 }
@@ -150,7 +149,7 @@ TEST(LoggingTest, StdString) {
   std::string msg = "std::string test";
   StdoutCapture capture;
   show_message(msg, MessageType::SUCCESS);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   EXPECT_NE(output.find("std::string test"), std::string::npos);
   EXPECT_NE(output.find(ANSI_GREEN), std::string::npos);
@@ -161,7 +160,7 @@ TEST(LoggingTest, LongMessage) {
   std::string long_msg(500, 'x');
   StdoutCapture capture;
   show_message(long_msg, MessageType::NORMAL);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   EXPECT_NE(output.find(long_msg), std::string::npos);
 }
@@ -170,7 +169,7 @@ TEST(LoggingTest, LongMessage) {
 TEST(LoggingTest, SpecialCharacters) {
   StdoutCapture capture;
   show_message("Message with\ttabs", MessageType::NORMAL);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   EXPECT_NE(output.find("Message with\ttabs"), std::string::npos);
 }
@@ -179,7 +178,7 @@ TEST(LoggingTest, SpecialCharacters) {
 TEST(LoggingTest, UnicodeCharacters) {
   StdoutCapture capture;
   show_message("Unicode: 你好世界 🌍", MessageType::SUCCESS);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   EXPECT_NE(output.find("Unicode: 你好世界 🌍"), std::string::npos);
   EXPECT_NE(output.find(ANSI_GREEN), std::string::npos);
@@ -189,7 +188,7 @@ TEST(LoggingTest, UnicodeCharacters) {
 TEST(LoggingTest, ColorCodeOrder) {
   StdoutCapture capture;
   show_message("Order test", MessageType::ERROR);
-  std::string output = capture.GetOutput();
+  std::string output = StdoutCapture::get_output();
 
   size_t red_pos = output.find(ANSI_RED);
   size_t text_pos = output.find("Order test");
@@ -206,5 +205,4 @@ TEST(LoggingTest, ColorCodeOrder) {
 }
 
 }  // namespace
-}  // namespace logging
-}  // namespace yass
+}  // namespace yass::logging

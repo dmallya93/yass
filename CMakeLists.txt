@@ -51,6 +51,22 @@ target_link_libraries(yass_logging
         spdlog::spdlog
 )
 
+# Config library
+add_library(yass_config
+    src/yass/config/config.cpp
+)
+
+target_include_directories(yass_config
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+
+target_link_libraries(yass_config
+    PUBLIC
+        yass_logging
+)
+
 # Sanitizer support: Enabled by default in Debug builds
 option(ENABLE_SANITIZERS "Enable address and undefined behavior sanitizers" ON)
 if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -75,6 +91,18 @@ target_link_libraries(test_logging
 )
 
 add_test(NAME LoggingTests COMMAND test_logging)
+
+add_executable(test_config
+    tests/unit/test_config.cpp
+)
+
+target_link_libraries(test_config
+    PRIVATE
+        yass_config
+        GTest::gtest_main
+)
+
+add_test(NAME ConfigTests COMMAND test_config)
 
 # Custom targets for code formatting
 find_program(CLANG_FORMAT_EXE NAMES "clang-format-20" "clang-format")
