@@ -19,8 +19,7 @@
 
 #include <string_view>
 
-namespace yass {
-namespace logging {
+namespace yass::logging {
 
 /// Types of messages: NORMAL, ERROR, or SUCCESS
 /// Corresponds to Ada's Messages_Types enumeration
@@ -50,7 +49,6 @@ constexpr MessageType DEFAULT_MESSAGE_TYPE = MessageType::ERROR;
 void show_message(std::string_view text,
                   MessageType message_type = DEFAULT_MESSAGE_TYPE);
 
-}  // namespace logging
-}  // namespace yass
+}  // namespace yass::logging
 
 #endif  // YASS_LOGGING_HPP

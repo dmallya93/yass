@@ -22,8 +22,7 @@
 #include <cassert>
 #include <memory>
 
-namespace yass {
-namespace logging {
+namespace yass::logging {
 
 namespace {
 
@@ -55,7 +54,8 @@ std::shared_ptr<spdlog::logger> get_logger() {
 }  // namespace
 
 void show_message(std::string_view text, MessageType message_type) {
-  // Precondition: text must not be empty (matching Ada's Pre => Text'Length > 0)
+  // Precondition: text must not be empty (matching Ada's Pre => Text'Length >
+  // 0)
   assert(!text.empty() && "Message text must not be empty");
 
   auto logger = get_logger();
@@ -63,18 +63,18 @@ void show_message(std::string_view text, MessageType message_type) {
   // Apply color based on message type
   // Matches Ada implementation: case Message_Type is...
   switch (message_type) {
-    case MessageType::ERROR:
-      // Put (Item => ESC & "[31m"); Put(Text); Put (Item => ESC & "[0m");
-      logger->info("{}{}{}", ANSI_RED, text, ANSI_RESET);
-      break;
-    case MessageType::SUCCESS:
-      // Put (Item => ESC & "[32m"); Put(Text); Put (Item => ESC & "[0m");
-      logger->info("{}{}{}", ANSI_GREEN, text, ANSI_RESET);
-      break;
-    case MessageType::NORMAL:
-      // null; Put(Text); (no color codes)
-      logger->info("{}", text);
-      break;
+  case MessageType::ERROR:
+    // Put (Item => ESC & "[31m"); Put(Text); Put (Item => ESC & "[0m");
+    logger->info("{}{}{}", ANSI_RED, text, ANSI_RESET);
+    break;
+  case MessageType::SUCCESS:
+    // Put (Item => ESC & "[32m"); Put(Text); Put (Item => ESC & "[0m");
+    logger->info("{}{}{}", ANSI_GREEN, text, ANSI_RESET);
+    break;
+  case MessageType::NORMAL:
+    // null; Put(Text); (no color codes)
+    logger->info("{}", text);
+    break;
   }
 
   // Explicitly flush to ensure message is displayed immediately
@@ -82,5 +82,4 @@ void show_message(std::string_view text, MessageType message_type) {
   logger->flush();
 }
 
-}  // namespace logging
-}  // namespace yass
+}  // namespace yass::logging

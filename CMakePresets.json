@@ -15,8 +15,8 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
                 "CMAKE_MODULE_PATH": "${sourceDir}/build",
-                "ENABLE_CLANG_TIDY": "OFF",
-                "ENABLE_SANITIZERS": "OFF"
+                "ENABLE_CLANG_TIDY": "ON",
+                "ENABLE_SANITIZERS": "ON"
             }
         },
         {

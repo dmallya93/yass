@@ -8,22 +8,28 @@ Checks: >
   portability-*,
   readability-*,
   -bugprone-easily-swappable-parameters,
+  -cert-err58-cpp,
   -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -modernize-raw-string-literal,
   -modernize-use-trailing-return-type,
-  -readability-magic-numbers,
-  -readability-identifier-length
+  -readability-braces-around-statements,
+  -readability-function-cognitive-complexity,
+  -readability-identifier-length,
+  -readability-magic-numbers
 
 CheckOptions:
   - key: readability-identifier-naming.NamespaceCase
     value: lower_case
   - key: readability-identifier-naming.ClassCase
-    value: CamelCase
+    value: aNy_CasE
   - key: readability-identifier-naming.FunctionCase
     value: lower_case
   - key: readability-identifier-naming.VariableCase
     value: lower_case
   - key: readability-identifier-naming.ConstantCase
-    value: UPPER_CASE
+    value: aNy_CasE
   - key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions
     value: true
   - key: performance-move-const-arg.CheckTriviallyCopyableMove
