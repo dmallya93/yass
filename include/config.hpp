@@ -57,6 +57,9 @@ struct YassConfig {
 // Global configuration instance (equivalent to Ada's Yass_Conf)
 extern YassConfig yass_config;
 
+// Global site directory path (set when loading config)
+extern std::filesystem::path site_directory;
+
 // Create a default site.cfg file in the specified directory
 // directory_name: The directory where site.cfg will be created
 void create_site_config(const std::filesystem::path& directory_name);
@@ -64,6 +67,11 @@ void create_site_config(const std::filesystem::path& directory_name);
 // Interactively prompt user for site configuration values
 // Updates the global yass_config with user input
 void interactive_site_config();
+
+// Load site configuration from site.cfg file
+// directory_name: The directory containing the site.cfg file
+// Returns true on success, false on error
+bool load_site_config(const std::filesystem::path& directory_name);
 
 }  // namespace config
 

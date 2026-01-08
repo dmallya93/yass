@@ -194,3 +194,92 @@ TEST_F(IntegrationTest, CreatedFilesHaveCorrectStructure) {
   EXPECT_TRUE(
       std::filesystem::is_regular_file(site_dir / "_layouts" / "default.html"));
 }
+
+// End-to-end test: create site, build it, verify output
+TEST_F(IntegrationTest, EndToEndBuildWorkflow) {
+  std::filesystem::path site_dir = test_dir_ / "e2e_site";
+  std::string yass_executable = std::filesystem::absolute("yass").string();
+
+  // Step 1: Create site with createnow
+  std::string create_command = "cd " + test_dir_.string() + " && " +
+                               yass_executable + " createnow e2e_site 2>&1";
+  std::string create_output = exec_command(create_command);
+
+  // Verify site was created successfully
+  ASSERT_TRUE(std::filesystem::exists(site_dir))
+      << "Site directory should be created";
+  ASSERT_TRUE(std::filesystem::exists(site_dir / "index.md"))
+      << "index.md should be created";
+
+  // Step 2: Add some markdown content to index.md
+  std::filesystem::path index_file = site_dir / "index.md";
+  std::ofstream md_append(index_file, std::ios::app);
+  md_append << "\n";
+  md_append << "# Welcome to My Site\n";
+  md_append << "\n";
+  md_append << "This is **bold** text and this is *italic* text.\n";
+  md_append << "\n";
+  md_append << "## Features\n";
+  md_append << "\n";
+  md_append << "- Feature 1\n";
+  md_append << "- Feature 2\n";
+  md_append.close();
+
+  // Step 3: Run build command
+  std::string build_command = yass_executable + " build " + site_dir.string() + " 2>&1";
+  std::string build_output = exec_command(build_command);
+
+  // Verify build success message is displayed
+  EXPECT_NE(build_output.find("Site built successfully"), std::string::npos)
+      << "Build success message should be displayed. Output: " << build_output;
+
+  // Step 4: Verify index.html is generated
+  std::filesystem::path output_file = site_dir / "_output" / "index.html";
+  ASSERT_TRUE(std::filesystem::exists(output_file))
+      << "index.html should be generated in _output directory";
+
+  // Step 5: Read generated HTML
+  std::ifstream html_file(output_file);
+  ASSERT_TRUE(html_file.is_open())
+      << "Should be able to open generated HTML file";
+  std::string html_content((std::istreambuf_iterator<char>(html_file)),
+                          std::istreambuf_iterator<char>());
+  html_file.close();
+
+  // Step 6: Verify HTML structure from layout
+  EXPECT_NE(html_content.find("<!DOCTYPE html>"), std::string::npos)
+      << "HTML should contain DOCTYPE declaration from layout";
+  EXPECT_NE(html_content.find("<html"), std::string::npos)
+      << "HTML should contain html tag from layout";
+  EXPECT_NE(html_content.find("</html>"), std::string::npos)
+      << "HTML should contain closing html tag from layout";
+
+  // Step 7: Verify converted markdown content
+  EXPECT_NE(html_content.find("<h1>Welcome to My Site</h1>"), std::string::npos)
+      << "HTML should contain converted H1 heading from markdown";
+  EXPECT_NE(html_content.find("<strong>bold</strong>"), std::string::npos)
+      << "HTML should contain bold text converted from markdown";
+  EXPECT_NE(html_content.find("<em>italic</em>"), std::string::npos)
+      << "HTML should contain italic text converted from markdown";
+  EXPECT_NE(html_content.find("<h2>Features</h2>"), std::string::npos)
+      << "HTML should contain H2 heading converted from markdown";
+  EXPECT_NE(html_content.find("<li>Feature 1</li>"), std::string::npos)
+      << "HTML should contain list item converted from markdown";
+
+  // Step 8: Verify site tags are substituted in layout
+  EXPECT_NE(html_content.find("New Site"), std::string::npos)
+      << "Site name from site.cfg should be substituted in HTML";
+  EXPECT_NE(html_content.find("<html lang=\"en\">"), std::string::npos)
+      << "Language tag from site.cfg should be substituted in HTML";
+
+  // Step 9: Verify page tags are substituted (title tag from index.md)
+  EXPECT_NE(html_content.find("<title>"), std::string::npos)
+      << "HTML should contain title tag from layout";
+
+  // Step 10: Verify comment lines were filtered out
+  EXPECT_EQ(html_content.find("All lines which starts with double minus"),
+            std::string::npos)
+      << "Comment lines from markdown should not appear in HTML";
+  EXPECT_EQ(html_content.find("layout: default"), std::string::npos)
+      << "Tag declaration lines should not appear in HTML content";
+}

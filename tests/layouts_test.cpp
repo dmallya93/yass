@@ -53,20 +53,27 @@ TEST_F(LayoutsTest, CreateLayoutGeneratesDefaultHtml) {
   EXPECT_NE(content.find("<meta charset=\"UTF-8\">"), std::string::npos);
   EXPECT_NE(content.find("<meta name=\"viewport\""), std::string::npos);
 
-  // Verify template tags
+  // Verify M1 template tags (simple substitution only)
   EXPECT_NE(content.find("{%Language%}"), std::string::npos);
   EXPECT_NE(content.find("{%Name%}"), std::string::npos);
   EXPECT_NE(content.find("{%Content%}"), std::string::npos);
-  EXPECT_NE(content.find("{%canonicallink%}"), std::string::npos);
-  EXPECT_NE(content.find("{%author%}"), std::string::npos);
-  EXPECT_NE(content.find("{%description%}"), std::string::npos);
-  EXPECT_NE(content.find("{%AtomLink%}"), std::string::npos);
 
-  // Verify conditional blocks (@@IF@@) are present for optional meta tags
-  EXPECT_NE(content.find("@@IF@@ {%author%}"), std::string::npos);
-  EXPECT_NE(content.find("@@IF@@ {%description%}"), std::string::npos);
-  EXPECT_NE(content.find("@@IF@@ {%AtomLink%}"), std::string::npos);
-  EXPECT_NE(content.find("@@END_IF@@"), std::string::npos);
+  // M1 does not include AWS template syntax (@@IF@@, etc.)
+  // These are deferred to Milestone 2
+  EXPECT_EQ(content.find("@@IF@@"), std::string::npos)
+      << "M1 layouts should not contain @@IF@@ syntax";
+  EXPECT_EQ(content.find("@@END_IF@@"), std::string::npos)
+      << "M1 layouts should not contain @@END_IF@@ syntax";
+
+  // M1 does not include optional tags that may not have values
+  EXPECT_EQ(content.find("{%canonicallink%}"), std::string::npos)
+      << "M1 layouts should not include optional tags without defaults";
+  EXPECT_EQ(content.find("{%author%}"), std::string::npos)
+      << "M1 layouts should not include optional tags without defaults";
+  EXPECT_EQ(content.find("{%description%}"), std::string::npos)
+      << "M1 layouts should not include optional tags without defaults";
+  EXPECT_EQ(content.find("{%AtomLink%}"), std::string::npos)
+      << "M1 layouts should not include optional tags without defaults";
 }
 
 TEST_F(LayoutsTest, CreateDirectoryLayoutGeneratesDirectoryHtml) {
@@ -91,10 +98,19 @@ TEST_F(LayoutsTest, CreateDirectoryLayoutGeneratesDirectoryHtml) {
   EXPECT_NE(content.find("<body>"), std::string::npos);
   EXPECT_NE(content.find("</body>"), std::string::npos);
 
-  // Verify @@TABLE@@ construct for directory listing (matching Ada)
-  EXPECT_NE(content.find("@@TABLE@@"), std::string::npos);
-  EXPECT_NE(content.find("@@END_TABLE@@"), std::string::npos);
-  EXPECT_NE(content.find("{%NAME_V%}"), std::string::npos);
+  // M1 does not implement @@TABLE@@ loops - deferred to Milestone 2
+  EXPECT_EQ(content.find("@@TABLE@@"), std::string::npos)
+      << "M1 layouts should not contain @@TABLE@@ syntax";
+  EXPECT_EQ(content.find("@@END_TABLE@@"), std::string::npos)
+      << "M1 layouts should not contain @@END_TABLE@@ syntax";
+  EXPECT_EQ(content.find("{%NAME_V%}"), std::string::npos)
+      << "M1 layouts should not include table iteration variables";
+
+  // Verify it's a placeholder for M2
+  EXPECT_NE(content.find("Directory"), std::string::npos)
+      << "Directory layout should mention directory listing";
+  EXPECT_NE(content.find("Milestone 2"), std::string::npos)
+      << "Directory layout should indicate M2 implementation";
 }
 
 TEST_F(LayoutsTest, CreateLayoutCreatesLayoutsDirectory) {

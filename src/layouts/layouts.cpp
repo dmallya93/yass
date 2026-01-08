@@ -39,26 +39,15 @@ void create_layout(const std::filesystem::path& directory_name) {
 
   const auto layout_path = layouts_dir / "default.html";
 
-  // Generate HTML5 layout matching Ada implementation
-  // Includes @@IF@@ conditionals for optional meta tags
-  // Note: The conditionals are preserved from the Ada version for semantic
-  // parity. Full AWS template syntax processing will be implemented in later
-  // milestones.
+  // Generate HTML5 layout for M1 (simple tag substitution only)
+  // M1 uses simple string replacement without conditionals or loops
+  // Only includes tags that are guaranteed to have values or are optional
+  // AWS template syntax (@@IF@@, @@TABLE@@, etc.) deferred to M2
   const std::string layout_content = R"(<!DOCTYPE html>
 <html lang="{%Language%}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="canonical" href="{%canonicallink%}">
-@@IF@@ {%author%} /= ""
-<meta name="author" content="{%author%}">
-@@END_IF@@
-@@IF@@ {%description%} /= ""
-<meta name="description" content="{%description%}">
-@@END_IF@@
-@@IF@@ {%AtomLink%} /= ""
-{%AtomLink%}
-@@END_IF@@
 <title>{%Name%}</title>
 </head>
 <body>
@@ -77,21 +66,20 @@ void create_directory_layout(const std::filesystem::path& directory_name) {
 
   const auto layout_path = layouts_dir / "directory.html";
 
-  // Generate directory listing layout matching Ada implementation
-  // Uses @@TABLE@@ construct for iterating over directory entries
-  // Note: The @@TABLE@@ syntax is preserved from the Ada version for semantic
-  // parity. Full template loop processing will be implemented in later
-  // milestones.
+  // Generate directory listing layout for M1 (simple tag substitution only)
+  // M1 uses simple string replacement without loops
+  // Directory listing functionality will be implemented in M2 with @@TABLE@@
+  // For now, create a placeholder layout that can be manually edited
   const std::string layout_content = R"(<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Directory Listing</title>
 </head>
 <body>
-@@TABLE@@
-<a href="{%NAME_V%}">{%NAME_V%}</a><br />
-@@END_TABLE@@
+<h1>Directory Listing</h1>
+<p>Directory listing will be implemented in Milestone 2.</p>
 </body>
 </html>
 )";

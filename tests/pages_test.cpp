@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 
+#include "config.hpp"
 #include "pages.hpp"
 
 // Test fixture for pages tests
@@ -142,4 +143,168 @@ TEST_F(PagesTest, CreateEmptyFileContainsAtomFeedDocumentation) {
       << "File should mention author tag";
   EXPECT_NE(content.find("summary"), std::string::npos)
       << "File should mention summary tag";
+}
+
+// Test create_page processes markdown and substitutes tags
+TEST_F(PagesTest, CreatePageProcessesMarkdownAndSubstituteTags) {
+  // Setup directories
+  std::filesystem::path site_dir = test_dir_ / "site";
+  std::filesystem::path layouts_dir = site_dir / "_layouts";
+  std::filesystem::path output_dir = site_dir / "_output";
+  std::filesystem::create_directories(layouts_dir);
+  std::filesystem::create_directories(output_dir);
+
+  // Configure yass_config
+  config::yass_config.layouts_directory = layouts_dir.string();
+  config::yass_config.output_directory = output_dir.string();
+  config::yass_config.markdown_comment = "--";
+  config::yass_config.start_tag_separator = "{%";
+  config::yass_config.end_tag_separator = "%}";
+  config::yass_config.tags["SiteName"] = "Test Site";
+  config::site_directory = site_dir;
+
+  // Create a layout file
+  std::filesystem::path layout_file = layouts_dir / "default.html";
+  std::ofstream layout(layout_file);
+  layout << "<!DOCTYPE html>\n";
+  layout << "<html>\n";
+  layout << "<head><title>{%title%}</title></head>\n";
+  layout << "<body>\n";
+  layout << "<h1>{%SiteName%}</h1>\n";
+  layout << "{%Content%}\n";
+  layout << "</body>\n";
+  layout << "</html>\n";
+  layout.close();
+
+  // Create a markdown file with tags
+  std::filesystem::path md_file = site_dir / "test.md";
+  std::ofstream md(md_file);
+  md << "-- layout: default\n";
+  md << "-- title: Test Page\n";
+  md << "\n";
+  md << "# Welcome\n";
+  md << "\n";
+  md << "This is **bold** text.\n";
+  md.close();
+
+  // Process the page
+  pages::create_page(md_file, site_dir);
+
+  // Verify output file exists
+  std::filesystem::path output_file = output_dir / "test.html";
+  ASSERT_TRUE(std::filesystem::exists(output_file))
+      << "Output HTML file should exist at: " << output_file;
+
+  // Read output content
+  std::ifstream output(output_file);
+  std::string content((std::istreambuf_iterator<char>(output)),
+                     std::istreambuf_iterator<char>());
+  output.close();
+
+  // Verify markdown was converted to HTML
+  EXPECT_NE(content.find("<h1>Welcome</h1>"), std::string::npos)
+      << "Should contain converted H1 heading";
+  EXPECT_NE(content.find("<strong>bold</strong>"), std::string::npos)
+      << "Should contain bold text";
+
+  // Verify page tag substitution
+  EXPECT_NE(content.find("<title>Test Page</title>"), std::string::npos)
+      << "Should substitute page title tag";
+
+  // Verify site tag substitution
+  EXPECT_NE(content.find("<h1>Test Site</h1>"), std::string::npos)
+      << "Should substitute site name tag";
+
+  // Verify layout structure
+  EXPECT_NE(content.find("<!DOCTYPE html>"), std::string::npos)
+      << "Should contain layout HTML structure";
+}
+
+// Test copy_file preserves directory structure
+TEST_F(PagesTest, CopyFilePreservesDirectoryStructure) {
+  // Setup directories
+  std::filesystem::path site_dir = test_dir_ / "site";
+  std::filesystem::path subdir = site_dir / "images";
+  std::filesystem::path output_dir = site_dir / "_output";
+  std::filesystem::create_directories(subdir);
+  std::filesystem::create_directories(output_dir);
+
+  // Configure yass_config
+  config::yass_config.output_directory = output_dir.string();
+
+  // Create a test file in subdirectory
+  std::filesystem::path source_file = subdir / "test.png";
+  std::ofstream source(source_file, std::ios::binary);
+  source << "PNG fake data";
+  source.close();
+
+  // Copy the file
+  pages::copy_file(source_file, site_dir);
+
+  // Verify file copied to correct location
+  std::filesystem::path output_file = output_dir / "images" / "test.png";
+  ASSERT_TRUE(std::filesystem::exists(output_file))
+      << "Copied file should exist at: " << output_file;
+
+  // Verify content matches
+  std::ifstream output(output_file, std::ios::binary);
+  std::string content((std::istreambuf_iterator<char>(output)),
+                     std::istreambuf_iterator<char>());
+  output.close();
+
+  EXPECT_EQ(content, "PNG fake data")
+      << "Copied file content should match source";
+}
+
+// Test create_page filters comment lines from content
+TEST_F(PagesTest, CreatePageFiltersCommentLines) {
+  // Setup directories
+  std::filesystem::path site_dir = test_dir_ / "site";
+  std::filesystem::path layouts_dir = site_dir / "_layouts";
+  std::filesystem::path output_dir = site_dir / "_output";
+  std::filesystem::create_directories(layouts_dir);
+  std::filesystem::create_directories(output_dir);
+
+  // Configure yass_config
+  config::yass_config.layouts_directory = layouts_dir.string();
+  config::yass_config.output_directory = output_dir.string();
+  config::yass_config.markdown_comment = "--";
+  config::yass_config.start_tag_separator = "{%";
+  config::yass_config.end_tag_separator = "%}";
+
+  // Create a simple layout
+  std::filesystem::path layout_file = layouts_dir / "default.html";
+  std::ofstream layout(layout_file);
+  layout << "<html><body>{%Content%}</body></html>\n";
+  layout.close();
+
+  // Create markdown with comments
+  std::filesystem::path md_file = site_dir / "test.md";
+  std::ofstream md(md_file);
+  md << "-- layout: default\n";
+  md << "-- This is a comment without a tag\n";
+  md << "-- Another comment\n";
+  md << "\n";
+  md << "This is actual content.\n";
+  md.close();
+
+  // Process the page
+  pages::create_page(md_file, site_dir);
+
+  // Read output
+  std::filesystem::path output_file = output_dir / "test.html";
+  std::ifstream output(output_file);
+  std::string content((std::istreambuf_iterator<char>(output)),
+                     std::istreambuf_iterator<char>());
+  output.close();
+
+  // Verify comment lines are not in output
+  EXPECT_EQ(content.find("This is a comment"), std::string::npos)
+      << "Comment lines should be filtered out";
+  EXPECT_EQ(content.find("Another comment"), std::string::npos)
+      << "Comment lines should be filtered out";
+
+  // Verify actual content is present
+  EXPECT_NE(content.find("This is actual content"), std::string::npos)
+      << "Actual content should be present";
 }

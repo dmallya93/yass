@@ -1,15 +1,22 @@
 #include "config.hpp"
 
+#include <algorithm>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <sstream>
 #include <string>
 
+#include "messages.hpp"
+
 namespace config {
 
 // Global configuration instance
 YassConfig yass_config;
+
+// Global site directory path
+std::filesystem::path site_directory;
 
 // Helper function to write a line to the config file
 static void write_line(std::ofstream& file, const std::string& line) {
@@ -363,6 +370,213 @@ void interactive_site_config() {
       ask_user("Markdown comment marker", yass_config.markdown_comment);
 
   std::cout << "\nConfiguration complete!\n\n";
+}
+
+// Helper function to trim whitespace from both ends of a string
+static std::string trim(const std::string& str) {
+  size_t start = 0;
+  while (start < str.length() && std::isspace(str[start])) {
+    ++start;
+  }
+
+  size_t end = str.length();
+  while (end > start && std::isspace(str[end - 1])) {
+    --end;
+  }
+
+  return str.substr(start, end - start);
+}
+
+// Helper function to convert string to lowercase
+static std::string to_lower_str(const std::string& str) {
+  std::string result = str;
+  std::transform(result.begin(), result.end(), result.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+  return result;
+}
+
+// Helper function to split a string by delimiter
+static std::vector<std::string> split(const std::string& str, char delimiter) {
+  std::vector<std::string> tokens;
+  std::string token;
+  std::istringstream token_stream(str);
+
+  while (std::getline(token_stream, token, delimiter)) {
+    std::string trimmed = trim(token);
+    if (!trimmed.empty()) {
+      tokens.push_back(trimmed);
+    }
+  }
+
+  return tokens;
+}
+
+bool load_site_config(const std::filesystem::path& directory_name) {
+  // Store the site directory globally
+  site_directory = directory_name;
+
+  // Reset config to defaults
+  yass_config = YassConfig();
+
+  // Clear existing tags and excluded files
+  yass_config.tags.clear();
+  yass_config.table_tags.clear();
+  yass_config.excluded_files.clear();
+
+  // Add default excluded directories
+  yass_config.excluded_files.push_back("_layouts");
+  yass_config.excluded_files.push_back("_output");
+  yass_config.excluded_files.push_back("_modules");
+  yass_config.excluded_files.push_back("site.cfg");
+
+  std::filesystem::path config_path = directory_name / "site.cfg";
+  std::ifstream config_file(config_path);
+
+  if (!config_file) {
+    messages::show_message("Failed to open site.cfg at: " + config_path.string(),
+                          messages::MessageType::ERROR);
+    return false;
+  }
+
+  std::string line;
+  int line_number = 0;
+
+  while (std::getline(config_file, line)) {
+    ++line_number;
+    line = trim(line);
+
+    // Skip empty lines and comments
+    if (line.empty() || line[0] == '#' || (line.length() >= 2 && line[0] == '-' && line[1] == '-')) {
+      continue;
+    }
+
+    // Find the separator (= or :)
+    size_t separator_pos = line.find('=');
+    if (separator_pos == std::string::npos) {
+      separator_pos = line.find(':');
+    }
+
+    if (separator_pos == std::string::npos) {
+      messages::show_message("Invalid config line " + std::to_string(line_number) + ": " + line,
+                            messages::MessageType::ERROR);
+      continue;
+    }
+
+    std::string field_name = trim(line.substr(0, separator_pos));
+    std::string value = trim(line.substr(separator_pos + 1));
+
+    // Parse configuration fields
+    if (field_name == "LayoutsDirectory") {
+      yass_config.layouts_directory = value;
+    } else if (field_name == "OutputDirectory") {
+      yass_config.output_directory = value;
+    } else if (field_name == "ModulesDirectory") {
+      yass_config.modules_directory = value;
+    } else if (field_name == "ExcludedFiles") {
+      std::vector<std::string> excluded = split(value, ',');
+      yass_config.excluded_files.insert(yass_config.excluded_files.end(),
+                                       excluded.begin(), excluded.end());
+    } else if (field_name == "ServerEnabled") {
+      yass_config.server_enabled = (to_lower_str(value) == "true");
+    } else if (field_name == "ServerPort") {
+      try {
+        yass_config.server_port = std::stoi(value);
+      } catch (...) {
+        messages::show_message("Invalid ServerPort value: " + value,
+                              messages::MessageType::ERROR);
+      }
+    } else if (field_name == "StopServerOnError") {
+      yass_config.stop_server_on_error = (to_lower_str(value) == "true");
+    } else if (field_name == "BrowserCommand") {
+      yass_config.browser_command = value;
+    } else if (field_name == "MonitorInterval") {
+      try {
+        yass_config.monitor_interval = std::stod(value);
+      } catch (...) {
+        messages::show_message("Invalid MonitorInterval value: " + value,
+                              messages::MessageType::ERROR);
+      }
+    } else if (field_name == "MonitorConfigInterval") {
+      try {
+        yass_config.monitor_config_interval = std::stod(value);
+      } catch (...) {
+        messages::show_message("Invalid MonitorConfigInterval value: " + value,
+                              messages::MessageType::ERROR);
+      }
+    } else if (field_name == "BaseURL") {
+      yass_config.base_url = value;
+      yass_config.tags["BaseURL"] = value;
+    } else if (field_name == "SitemapEnabled") {
+      yass_config.sitemap_enabled = (to_lower_str(value) == "true");
+    } else if (field_name == "HTMLEnabled") {
+      yass_config.html_enabled = (to_lower_str(value) == "true");
+    } else if (field_name == "AtomFeedSource") {
+      yass_config.atom_feed_source = value;
+    } else if (field_name == "AtomFeedAmount") {
+      try {
+        yass_config.atom_feed_amount = std::stoi(value);
+      } catch (...) {
+        messages::show_message("Invalid AtomFeedAmount value: " + value,
+                              messages::MessageType::ERROR);
+      }
+    } else if (field_name == "Name") {
+      yass_config.site_name = value;
+      yass_config.tags["Name"] = value;
+    } else if (field_name == "Description") {
+      yass_config.site_description = value;
+      yass_config.tags["Description"] = value;
+    } else if (field_name == "Language") {
+      yass_config.language = value;
+      yass_config.tags["Language"] = value;
+    } else if (field_name == "Author") {
+      yass_config.author = value;
+      yass_config.tags["Author"] = value;
+    } else if (field_name == "AuthorEmail") {
+      yass_config.author_email = value;
+      yass_config.tags["AuthorEmail"] = value;
+    } else if (field_name == "StartTagSeparator") {
+      yass_config.start_tag_separator = value;
+    } else if (field_name == "EndTagSeparator") {
+      yass_config.end_tag_separator = value;
+    } else if (field_name == "MarkdownComment") {
+      yass_config.markdown_comment = value;
+    } else {
+      // User-defined tag
+      // Check if it's initializing a composite tag
+      if (value == "[]") {
+        yass_config.table_tags[field_name] = std::vector<std::string>();
+      } else if (yass_config.table_tags.count(field_name) > 0) {
+        // Add to existing composite tag
+        yass_config.table_tags[field_name].push_back(value);
+      } else {
+        // Simple tag
+        yass_config.tags[field_name] = value;
+      }
+    }
+  }
+
+  config_file.close();
+
+  // Normalize directory paths to be absolute
+  if (!yass_config.layouts_directory.empty() &&
+      yass_config.layouts_directory[0] != '/') {
+    yass_config.layouts_directory =
+      (directory_name / yass_config.layouts_directory).string();
+  }
+
+  if (!yass_config.output_directory.empty() &&
+      yass_config.output_directory[0] != '/') {
+    yass_config.output_directory =
+      (directory_name / yass_config.output_directory).string();
+  }
+
+  if (!yass_config.modules_directory.empty() &&
+      yass_config.modules_directory[0] != '/') {
+    yass_config.modules_directory =
+      (directory_name / yass_config.modules_directory).string();
+  }
+
+  return true;
 }
 
 }  // namespace config

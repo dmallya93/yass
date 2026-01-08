@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <filesystem>
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -27,7 +28,7 @@ void show_help() {
   std::cout << "  create [dir]      Create new site with interactive "
                "configuration\n";
   std::cout << "  createnow [dir]   Create new site with default configuration\n";
-  std::cout << "  build [dir]       Build existing site (not yet implemented)\n";
+  std::cout << "  build [dir]       Build existing site\n";
   std::cout << "  server [dir]      Start development server (not yet "
                "implemented)\n";
   std::cout << "  createfile [name] Create new page file (not yet implemented)\n";
@@ -128,6 +129,58 @@ bool valid_arguments(const std::vector<std::string>& args,
   }
 
   return true;
+}
+
+// Build the site from the specified directory
+void build_site(const std::filesystem::path& directory_name) {
+  // Recursive function to process files and directories
+  std::function<void(const std::filesystem::path&)> process_directory;
+
+  process_directory = [&](const std::filesystem::path& dir) {
+    try {
+      for (const auto& entry : std::filesystem::directory_iterator(dir)) {
+        std::string filename = entry.path().filename().string();
+
+        // Check if file/directory is excluded
+        bool excluded = false;
+        for (const auto& excluded_name : config::yass_config.excluded_files) {
+          if (filename == excluded_name) {
+            excluded = true;
+            break;
+          }
+        }
+
+        if (excluded) {
+          continue;
+        }
+
+        if (entry.is_directory()) {
+          // Recursively process subdirectory
+          process_directory(entry.path());
+        } else if (entry.is_regular_file()) {
+          // Process file
+          if (entry.path().extension() == ".md") {
+            // Process markdown file
+            pages::create_page(entry.path(), directory_name);
+          } else {
+            // Copy other files
+            pages::copy_file(entry.path(), directory_name);
+          }
+        }
+      }
+    } catch (const std::filesystem::filesystem_error& e) {
+      messages::show_message("Filesystem error: " + std::string(e.what()),
+                            messages::MessageType::ERROR);
+    }
+  };
+
+  // Start processing from the site directory
+  process_directory(directory_name);
+
+  // Show success message
+  messages::show_message("Site built successfully in " +
+                        config::yass_config.output_directory,
+                        messages::MessageType::SUCCESS);
 }
 
 // Create new site with interactive or default configuration
@@ -233,11 +286,28 @@ int main(int argc, char* argv[]) {
     return 0;
   }
 
-  // Build (not yet implemented)
+  // Build
   if (args[1] == "build") {
-    messages::show_message("Build command not yet implemented",
-                           messages::MessageType::ERROR);
-    return 1;
+    // Validate arguments - directory must exist
+    if (!valid_arguments(args, "with the site to build.", false)) {
+      return 1;
+    }
+
+    // Load configuration
+    if (!config::load_site_config(work_directory)) {
+      return 1;
+    }
+
+    // Build the site
+    try {
+      build_site(work_directory);
+    } catch (const std::exception& e) {
+      messages::show_message("Build failed: " + std::string(e.what()),
+                            messages::MessageType::ERROR);
+      return 1;
+    }
+
+    return 0;
   }
 
   // Server (not yet implemented)
