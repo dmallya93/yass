@@ -33,6 +33,9 @@ endif()
 find_package(GTest REQUIRED)
 # For Ubuntu 22.04, we need to link against pthread
 find_package(Threads REQUIRED)
+# Find cmark library for markdown processing
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(CMARK REQUIRED libcmark)
 
 # Messages library
 add_library(messages
@@ -65,6 +68,20 @@ target_link_libraries(layouts PUBLIC
     messages
 )
 
+# CMark wrapper library
+add_library(cmark_wrapper
+    src/cmark/cmark_wrapper.cpp
+)
+
+target_include_directories(cmark_wrapper PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMARK_INCLUDE_DIRS}
+)
+
+target_link_libraries(cmark_wrapper PUBLIC
+    ${CMARK_LIBRARIES}
+)
+
 # Pages library
 add_library(pages
     src/pages/pages.cpp
@@ -76,6 +93,12 @@ target_include_directories(pages PUBLIC
 
 target_link_libraries(pages PUBLIC
     config
+    cmark_wrapper
+    messages
+)
+
+target_link_libraries(config PUBLIC
+    messages
 )
 
 # Main executable
@@ -89,6 +112,7 @@ target_include_directories(yass PRIVATE
 
 target_link_libraries(yass PRIVATE
     config
+    cmark_wrapper
     layouts
     messages
     pages
