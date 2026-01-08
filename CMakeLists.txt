@@ -43,6 +43,15 @@ target_include_directories(messages PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+# Config library
+add_library(config
+    src/config/config.cpp
+)
+
+target_include_directories(config PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
 # Layouts library
 add_library(layouts
     src/layouts/layouts.cpp
@@ -54,6 +63,35 @@ target_include_directories(layouts PUBLIC
 
 target_link_libraries(layouts PUBLIC
     messages
+)
+
+# Pages library
+add_library(pages
+    src/pages/pages.cpp
+)
+
+target_include_directories(pages PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(pages PUBLIC
+    config
+)
+
+# Main executable
+add_executable(yass
+    src/main.cpp
+)
+
+target_include_directories(yass PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+target_link_libraries(yass PRIVATE
+    config
+    layouts
+    messages
+    pages
 )
 
 # Sanitizer support: Enabled by default in Debug builds
@@ -84,6 +122,42 @@ target_include_directories(layouts_test PRIVATE
 )
 
 add_test(NAME layouts_test COMMAND layouts_test)
+
+# Pages unit test
+add_executable(pages_test
+    tests/pages_test.cpp
+)
+
+target_link_libraries(pages_test
+    pages
+    config
+    GTest::gtest_main
+    Threads::Threads
+)
+
+target_include_directories(pages_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_test(NAME pages_test COMMAND pages_test)
+
+# Integration test
+add_executable(integration_test
+    tests/integration_test.cpp
+)
+
+target_link_libraries(integration_test
+    GTest::gtest_main
+    Threads::Threads
+)
+
+target_include_directories(integration_test PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+
+add_test(NAME integration_test COMMAND integration_test
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+)
 
 # Custom targets for code formatting
 find_program(CLANG_FORMAT_EXE NAMES "clang-format-20" "clang-format")
