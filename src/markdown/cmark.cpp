@@ -25,14 +25,14 @@ namespace cmark {
 std::string markdown_to_html(std::string_view text, bool html_enabled) {
     // Set options based on html_enabled flag
     // CMARK_OPT_UNSAFE (0x20000) allows raw HTML passthrough
-    const int options = html_enabled ? 0x20000 : 0;
-    
+    const int OPTIONS = html_enabled ? 0x20000 : 0;
+
     // Call cmark C API
     // Note: cmark_markdown_to_html takes a const char*, length, and options
     char* c_result = cmark_markdown_to_html(
         text.data(),
         text.length(),
-        options
+        OPTIONS
     );
     
     // Handle null return (shouldn't happen in normal use, but be defensive)

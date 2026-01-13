@@ -107,7 +107,7 @@ int main() {
 
     // Test 6: Empty string
     {
-        std::string markdown = "";
+        std::string markdown;
         std::string html = cmark::markdown_to_html(markdown, false);
         assert_true(html.empty() || html == "\n", "Test 6: Empty markdown should produce empty or minimal output");
     }

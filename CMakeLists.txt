@@ -24,7 +24,7 @@ endif()
 
 # Set up clang-tidy (automatic during build)
 option(ENABLE_CLANG_TIDY "Enable clang-tidy static analysis" ON)
-find_program(CLANG_TIDY_EXE NAMES "clang-tidy-20" "clang-tidy")
+find_program(CLANG_TIDY_EXE NAMES "clang-tidy-20" "clang-tidy-14" "clang-tidy")
 if(CLANG_TIDY_EXE AND ENABLE_CLANG_TIDY)
     set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
 endif()
@@ -32,6 +32,26 @@ endif()
 # Find cmark library
 find_library(CMARK_LIBRARY NAMES cmark libcmark REQUIRED)
 find_path(CMARK_INCLUDE_DIR NAMES cmark.h REQUIRED)
+
+# Config library
+add_library(config
+    src/config/config.cpp
+)
+
+target_include_directories(config
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+# Messages library
+add_library(messages
+    src/messages/messages.cpp
+)
+
+target_include_directories(messages
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 
 # Markdown wrapper library
 add_library(markdown
@@ -60,7 +80,13 @@ if(ENABLE_SANITIZERS AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     endif()
 endif()
 
-# Test executable
+# Enable testing
+enable_testing()
+
+# Find Google Test
+find_package(GTest QUIET)
+
+# Test executables
 add_executable(test_cmark
     tests/test_cmark.cpp
 )
@@ -75,6 +101,46 @@ target_include_directories(test_cmark
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Enable testing
-enable_testing()
 add_test(NAME test_cmark COMMAND test_cmark)
+
+# Config tests (only if GTest is available)
+if(GTest_FOUND)
+    add_executable(test_config
+        tests/test_config.cpp
+    )
+
+    target_link_libraries(test_config
+        PRIVATE
+            config
+            GTest::gtest
+            GTest::gtest_main
+    )
+
+    target_include_directories(test_config
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+
+    add_test(NAME test_config COMMAND test_config)
+
+    # Messages tests
+    add_executable(test_messages
+        tests/test_messages.cpp
+    )
+
+    target_link_libraries(test_messages
+        PRIVATE
+            messages
+            GTest::gtest
+            GTest::gtest_main
+    )
+
+    target_include_directories(test_messages
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}/src
+    )
+
+    add_test(NAME test_messages COMMAND test_messages)
+else()
+    message(STATUS "Google Test not found, skipping config and messages tests")
+endif()
